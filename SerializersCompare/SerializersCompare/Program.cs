@@ -16,7 +16,7 @@ namespace SerializersCompare
     {
         private static readonly String _workDirectoryPath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}/SerializersCompare";
         private static readonly Stopwatch _timer = new Stopwatch();
-        private const Int32 PERSONS_NUMBER = 200000;
+        private const Int32 PERSONS_NUMBER = 100000;
 
 
         static void Main(string[] args)
@@ -70,7 +70,7 @@ namespace SerializersCompare
 
 
         // FUNCTIONS //////////////////////////////////////////////////////////////////////////////
-        private static List<Person> GeneratePersons()
+        private static Person[] GeneratePersons()
         {
             var personsList = new List<Person>(PERSONS_NUMBER);
             var rnd = new Random();
@@ -81,19 +81,20 @@ namespace SerializersCompare
                 personsList.Add(new Person
                 {
                     Id = personId,
+                    TransportId = Guid.NewGuid(),
                     Name = $"Person {personId} name",
-                    Phones = new Int32[] { rnd.Next(), rnd.Next(), rnd.Next() },
-                    Address = new Address
-                    {
-                        Value1 = rnd.Next(),
-                        Value2 = rnd.NextDouble(),
-                        Value3 = rnd.Next() > Int32.MaxValue / 2
-                    }
+                    SequenceId = i,
+                    CreditCards = new Int32[] { rnd.Next(), rnd.Next(), rnd.Next() },
+                    Age = rnd.Next(100),
+                    Phones = new String[] { rnd.Next().ToString(), rnd.Next().ToString(), rnd.Next().ToString() },
+                    BirthDate = DateTime.UtcNow + TimeSpan.FromTicks(rnd.Next()),
+                    Salary = rnd.NextDouble(),
+                    IsMarred = rnd.Next() > Int32.MaxValue / 2
                 });
             }
-            return personsList;
+            return personsList.ToArray();
         }
-        private static Byte[] SerializeToProtobuf(List<Person> persons)
+        private static Byte[] SerializeToProtobuf(Person[] persons)
         {
             using (var memoryStream = new MemoryStream())
             {
@@ -103,7 +104,7 @@ namespace SerializersCompare
                 return memoryStream.ToArray();
             }
         }
-        private static Byte[] SerializeToJson(List<Person> persons)
+        private static Byte[] SerializeToJson(Person[] persons)
         {
             using (var memoryStream = new MemoryStream())
             {
@@ -116,7 +117,7 @@ namespace SerializersCompare
                 }
             }
         }
-        private static Byte[] SerializeToSimpleBinary(List<Person> persons)
+        private static Byte[] SerializeToSimpleBinary(Person[] persons)
         {
             using (var memoryStream = new MemoryStream())
             {
@@ -126,7 +127,7 @@ namespace SerializersCompare
                 return memoryStream.ToArray();
             }
         }
-        private static Byte[] SerializeToXml(SaveOptions saveOptions, List<Person> persons)
+        private static Byte[] SerializeToXml(SaveOptions saveOptions, Person[] persons)
         {
             using (var memoryStream = new MemoryStream())
             {
@@ -136,7 +137,7 @@ namespace SerializersCompare
                 return memoryStream.ToArray();
             }
         }
-        private static Byte[] SerializeToProtobufPlusZip(String entryFileName, List<Person> persons)
+        private static Byte[] SerializeToProtobufPlusZip(String entryFileName, Person[] persons)
         {
             using (var memoryStream = new MemoryStream())
             {
@@ -147,12 +148,11 @@ namespace SerializersCompare
                     _timer.Restart();
                     Serializer.Serialize(zipStream, persons);
                     _timer.Stop();
-
-                    return memoryStream.ToArray();
                 }
+                return memoryStream.ToArray();
             }
         }
-        private static Byte[] SerializeToJsonPlusZip(String entryFileName, List<Person> persons)
+        private static Byte[] SerializeToJsonPlusZip(String entryFileName, Person[] persons)
         {
             using (var memoryStream = new MemoryStream())
             {
@@ -165,12 +165,12 @@ namespace SerializersCompare
                         writer.Write(JsonConvert.SerializeObject(persons));
                         _timer.Stop();
 
-                        return memoryStream.ToArray();
                     }
+                    return memoryStream.ToArray();
                 }
             }
         }
-        private static Byte[] SerializeToSimpleBinaryPlusZip(String entryFileName, List<Person> persons)
+        private static Byte[] SerializeToSimpleBinaryPlusZip(String entryFileName, Person[] persons)
         {
             using (var memoryStream = new MemoryStream())
             {
@@ -180,12 +180,11 @@ namespace SerializersCompare
                     _timer.Restart();
                     new BinaryFormatter().Serialize(zipArchiveEntry.Open(), persons);
                     _timer.Stop();
-
-                    return memoryStream.ToArray();
                 }
+                return memoryStream.ToArray();
             }
         }
-        private static Byte[] SerializeToXmlPlusZip(String entryFileName, SaveOptions saveOptions, List<Person> persons)
+        private static Byte[] SerializeToXmlPlusZip(String entryFileName, SaveOptions saveOptions, Person[] persons)
         {
             using (var memoryStream = new MemoryStream())
             {
@@ -195,9 +194,8 @@ namespace SerializersCompare
                     _timer.Restart();
                     GenerateXml(zipArchiveEntry.Open(), saveOptions, persons);
                     _timer.Stop();
-
-                    return memoryStream.ToArray();
                 }
+                return memoryStream.ToArray();
             }
         }
 
@@ -217,7 +215,7 @@ namespace SerializersCompare
                 return (T)new BinaryFormatter().Deserialize(fileStream);
             }
         }
-        private static void GenerateXml(Stream memoryStream, SaveOptions saveOptions, List<Person> persons)
+        private static void GenerateXml(Stream memoryStream, SaveOptions saveOptions, Person[] persons)
         {
             var xDoc = new XDocument(
                     new XDeclaration("1.0", "UTF-8", "yes"),
@@ -229,19 +227,29 @@ namespace SerializersCompare
             {
                 var personElement = new XElement("person",
                     new XAttribute("id", x.Id),
+                    new XAttribute("transportId", x.TransportId.ToString()),
                     new XAttribute("name", x.Name),
-                    new XElement("address",
-                        new XElement("value1", x.Address.Value1),
-                        new XElement("value2", x.Address.Value2),
-                        new XElement("value3", x.Address.Value3)));
+                    new XAttribute("ancestorId", x.SequenceId),
+                    new XAttribute("age", x.Age),
+                    new XAttribute("birthDate", x.BirthDate),
+                    new XAttribute("salary", x.Salary),
+                    new XAttribute("isMarred", x.IsMarred));
+
+                var creditCardsElement = new XElement("creditCards");
+                foreach (var y in x.CreditCards)
+                {
+                    creditCardsElement.Add(new XElement("creditCard",
+                        new XText(y.ToString())));
+                }
+                personElements.Add(creditCardsElement);
 
                 var personPhonesElement = new XElement("phones");
                 foreach (var y in x.Phones)
                 {
-                    personPhonesElement.Add(
-                        new XElement("phone",
-                            new XText(y.ToString())));
+                    personPhonesElement.Add(new XElement("phone",
+                        new XText(y)));
                 }
+                personElement.Add(personPhonesElement);
                 personElements.Add(personElement);
             }
             xDoc.Add(personElements);
