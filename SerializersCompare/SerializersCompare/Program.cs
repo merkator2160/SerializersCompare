@@ -15,6 +15,7 @@ namespace SerializersCompare
     class Program
     {
         private static readonly String _workDirectoryPath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}/SerializersCompare";
+        private static readonly Stopwatch _timer = new Stopwatch();
         private const Int32 PERSONS_NUMBER = 200000;
 
 
@@ -24,50 +25,44 @@ namespace SerializersCompare
                 Directory.CreateDirectory(_workDirectoryPath);
 
             Console.WriteLine("Processing... \r\n");
-            var timer = new Stopwatch();
             var persons = GeneratePersons();
 
-            timer.Restart();
-            SerializeToProtobuf($"{_workDirectoryPath}/personsProto.bin", persons);
-            timer.Stop();
-            ShowElapsedTime("Protobuf", timer.Elapsed);
+            var buffer = SerializeToProtobuf(persons);
+            ShowResult("Protobuf", _timer.Elapsed, buffer.Length);
+            WriteResultToFile($"{_workDirectoryPath}/personsProto.bin", buffer);
 
-            timer.Restart();
-            SerializeToJson($"{_workDirectoryPath}/persons.json", persons);
-            timer.Stop();
-            ShowElapsedTime("JSON", timer.Elapsed);
+            buffer = SerializeToJson(persons);
+            ShowResult("JSON", _timer.Elapsed, buffer.Length);
+            WriteResultToFile($"{_workDirectoryPath}/persons.json", buffer);
 
-            timer.Restart();
-            SerializeToSimpleBinary($"{_workDirectoryPath}/personsSimple.dat", persons);
-            timer.Stop();
-            ShowElapsedTime("Binary", timer.Elapsed);
+            buffer = SerializeToSimpleBinary(persons);
+            ShowResult("Binary", _timer.Elapsed, buffer.Length);
+            WriteResultToFile($"{_workDirectoryPath}/personsSimple.dat", buffer);
 
-            timer.Restart();
-            SerializeToXml($"{_workDirectoryPath}/persons.xml", SaveOptions.DisableFormatting, persons);
-            timer.Stop();
-            ShowElapsedTime("XML", timer.Elapsed);
+            buffer = SerializeToXml(SaveOptions.DisableFormatting, persons);
+            ShowResult("XML", _timer.Elapsed, buffer.Length);
+            WriteResultToFile($"{_workDirectoryPath}/persons.xml", buffer);
+
 
             Console.WriteLine();
 
-            timer.Restart();
-            SerializeToProtobufPlusZip($"{_workDirectoryPath}/personsProto.zip", "persons.bin", persons);
-            timer.Stop();
-            ShowElapsedTime("Protobuf + zip", timer.Elapsed);
 
-            timer.Restart();
-            SerializeToJsonPlusZip($"{_workDirectoryPath}/personsJson.zip", "persons.json", persons);
-            timer.Stop();
-            ShowElapsedTime("JSON + zip", timer.Elapsed);
+            buffer = SerializeToProtobufPlusZip("persons.bin", persons);
+            ShowResult("Protobuf + zip", _timer.Elapsed, buffer.Length);
+            WriteResultToFile($"{_workDirectoryPath}/personsProto.zip", buffer);
 
-            timer.Restart();
-            SerializeToSimpleBinaryPlusZip($"{_workDirectoryPath}/personsSimple.zip", "persons.dat", persons);
-            timer.Stop();
-            ShowElapsedTime("Binary + zip", timer.Elapsed);
+            buffer = SerializeToJsonPlusZip("persons.json", persons);
+            ShowResult("JSON + zip", _timer.Elapsed, buffer.Length);
+            WriteResultToFile($"{_workDirectoryPath}/personsJson.zip", buffer);
 
-            timer.Restart();
-            SerializeToXmlPlusZip($"{_workDirectoryPath}/personsXml.zip", "persons.xml", SaveOptions.DisableFormatting, persons);
-            timer.Stop();
-            ShowElapsedTime("XML + zip", timer.Elapsed);
+            buffer = SerializeToSimpleBinaryPlusZip("persons.dat", persons);
+            ShowResult("Binary + zip", _timer.Elapsed, buffer.Length);
+            WriteResultToFile($"{_workDirectoryPath}/personsSimple.zip", buffer);
+
+            buffer = SerializeToXmlPlusZip("persons.xml", SaveOptions.DisableFormatting, persons);
+            ShowResult("XML + zip", _timer.Elapsed, buffer.Length);
+            WriteResultToFile($"{_workDirectoryPath}/personsXml.zip", buffer);
+
 
             Console.WriteLine("\r\nDone");
             Console.ReadKey();
@@ -98,88 +93,123 @@ namespace SerializersCompare
             }
             return personsList;
         }
-        private static void SerializeToProtobuf(String filePath, List<Person> persons)
+        private static Byte[] SerializeToProtobuf(List<Person> persons)
         {
-            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+            using (var memoryStream = new MemoryStream())
             {
-                Serializer.Serialize(fileStream, persons);
+                _timer.Restart();
+                Serializer.Serialize(memoryStream, persons);
+                _timer.Stop();
+                return memoryStream.ToArray();
             }
         }
-        private static void SerializeToProtobufPlusZip(String filePath, String entryFileName, List<Person> persons)
+        private static Byte[] SerializeToJson(List<Person> persons)
         {
-            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+            using (var memoryStream = new MemoryStream())
             {
-                using (var zipArchive = new ZipArchive(fileStream, ZipArchiveMode.Create, true))
+                using (var writer = new StreamWriter(memoryStream, Encoding.UTF8))
+                {
+                    _timer.Restart();
+                    writer.Write(JsonConvert.SerializeObject(persons));
+                    _timer.Stop();
+                    return memoryStream.ToArray();
+                }
+            }
+        }
+        private static Byte[] SerializeToSimpleBinary(List<Person> persons)
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                _timer.Restart();
+                new BinaryFormatter().Serialize(memoryStream, persons);
+                _timer.Stop();
+                return memoryStream.ToArray();
+            }
+        }
+        private static Byte[] SerializeToXml(SaveOptions saveOptions, List<Person> persons)
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                _timer.Restart();
+                GenerateXml(memoryStream, saveOptions, persons);
+                _timer.Stop();
+                return memoryStream.ToArray();
+            }
+        }
+        private static Byte[] SerializeToProtobufPlusZip(String entryFileName, List<Person> persons)
+        {
+            using (var memoryStream = new MemoryStream())
+            {
+                using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
                 {
                     var zipArchiveEntry = zipArchive.CreateEntry(entryFileName, CompressionLevel.Optimal);
                     var zipStream = zipArchiveEntry.Open();
+                    _timer.Restart();
                     Serializer.Serialize(zipStream, persons);
+                    _timer.Stop();
+
+                    return memoryStream.ToArray();
                 }
             }
         }
-        private static void SerializeToJson(String filePath, List<Person> persons)
+        private static Byte[] SerializeToJsonPlusZip(String entryFileName, List<Person> persons)
         {
-            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+            using (var memoryStream = new MemoryStream())
             {
-                using (var writer = new StreamWriter(fileStream, Encoding.UTF8))
-                {
-                    writer.Write(JsonConvert.SerializeObject(persons));
-                }
-            }
-        }
-        private static void SerializeToJsonPlusZip(String filePath, String entryFileName, List<Person> persons)
-        {
-            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
-            {
-                using (var zipArchive = new ZipArchive(fileStream, ZipArchiveMode.Create, true))
+                using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
                 {
                     var zipArchiveEntry = zipArchive.CreateEntry(entryFileName, CompressionLevel.Optimal);
                     using (var writer = new StreamWriter(zipArchiveEntry.Open(), Encoding.UTF8))
                     {
+                        _timer.Restart();
                         writer.Write(JsonConvert.SerializeObject(persons));
+                        _timer.Stop();
+
+                        return memoryStream.ToArray();
                     }
                 }
             }
         }
-        private static void SerializeToSimpleBinary(String filePath, List<Person> persons)
+        private static Byte[] SerializeToSimpleBinaryPlusZip(String entryFileName, List<Person> persons)
         {
-            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+            using (var memoryStream = new MemoryStream())
             {
-                new BinaryFormatter().Serialize(fileStream, persons);
-            }
-        }
-        private static void SerializeToSimpleBinaryPlusZip(String filePath, String entryFileName, List<Person> persons)
-        {
-            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
-            {
-                using (var zipArchive = new ZipArchive(fileStream, ZipArchiveMode.Create, true))
+                using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
                 {
                     var zipArchiveEntry = zipArchive.CreateEntry(entryFileName, CompressionLevel.Optimal);
+                    _timer.Restart();
                     new BinaryFormatter().Serialize(zipArchiveEntry.Open(), persons);
+                    _timer.Stop();
+
+                    return memoryStream.ToArray();
                 }
             }
         }
-        private static void SerializeToXml(String filePath, SaveOptions saveOptions, List<Person> persons)
+        private static Byte[] SerializeToXmlPlusZip(String entryFileName, SaveOptions saveOptions, List<Person> persons)
         {
-            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+            using (var memoryStream = new MemoryStream())
             {
-                GenerateXml(fileStream, saveOptions, persons);
-            }
-        }
-        private static void SerializeToXmlPlusZip(String filePath, String entryFileName, SaveOptions saveOptions, List<Person> persons)
-        {
-            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
-            {
-                using (var zipArchive = new ZipArchive(fileStream, ZipArchiveMode.Create, true))
+                using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
                 {
                     var zipArchiveEntry = zipArchive.CreateEntry(entryFileName, CompressionLevel.Optimal);
+                    _timer.Restart();
                     GenerateXml(zipArchiveEntry.Open(), saveOptions, persons);
+                    _timer.Stop();
+
+                    return memoryStream.ToArray();
                 }
             }
         }
 
 
         // SUPPORT FUNCTIONS //////////////////////////////////////////////////////////////////////
+        private static void WriteResultToFile(String filePath, Byte[] buffer)
+        {
+            using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
+            {
+                fileStream.Write(buffer, 0, buffer.Length);
+            }
+        }
         private static T DeserializeSimpleBinary<T>(String filePath)
         {
             using (var fileStream = new FileStream(filePath, FileMode.Open))
@@ -187,7 +217,7 @@ namespace SerializersCompare
                 return (T)new BinaryFormatter().Deserialize(fileStream);
             }
         }
-        private static void GenerateXml(Stream fileStream, SaveOptions saveOptions, List<Person> persons)
+        private static void GenerateXml(Stream memoryStream, SaveOptions saveOptions, List<Person> persons)
         {
             var xDoc = new XDocument(
                     new XDeclaration("1.0", "UTF-8", "yes"),
@@ -215,11 +245,11 @@ namespace SerializersCompare
                 personElements.Add(personElement);
             }
             xDoc.Add(personElements);
-            xDoc.Save(fileStream, saveOptions);
+            xDoc.Save(memoryStream, saveOptions);
         }
-        private static void ShowElapsedTime(String methodName, TimeSpan elapsedTime)
+        private static void ShowResult(String methodName, TimeSpan elapsedTime, Int64 resultSize)
         {
-            Console.WriteLine($"{methodName,-15}\t{elapsedTime.Hours:00}:{elapsedTime.Minutes:00}:{elapsedTime.Seconds:00}.{elapsedTime.Milliseconds / 10:00}");
+            Console.WriteLine($"{methodName,-15}\t{elapsedTime.Hours:00}:{elapsedTime.Minutes:00}:{elapsedTime.Seconds:00}.{elapsedTime.Milliseconds / 10:00}\t{resultSize / 1000:###.###.###} KB");
         }
     }
 }
