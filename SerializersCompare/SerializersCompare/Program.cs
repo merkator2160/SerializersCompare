@@ -210,7 +210,7 @@ namespace SerializersCompare
                 fileStream.Write(buffer, 0, buffer.Length);
             }
         }
-        private static T DeserializeSimpleBinary<T>(String filePath)
+        private static T DeserializeSimpleBinaryFromFile<T>(String filePath)
         {
             using (var fileStream = new FileStream(filePath, FileMode.Open))
             {
