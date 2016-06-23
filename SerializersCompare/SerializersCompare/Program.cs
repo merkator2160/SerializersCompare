@@ -3,6 +3,7 @@ using ProtoBuf;
 using SerializersCompare.Models;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Runtime.Serialization.Formatters.Binary;
@@ -22,15 +23,54 @@ namespace SerializersCompare
             if (!Directory.Exists(_workDirectoryPath))
                 Directory.CreateDirectory(_workDirectoryPath);
 
+            Console.WriteLine("Processing... \r\n");
+            var timer = new Stopwatch();
             var persons = GeneratePersons();
+
+            timer.Restart();
             SerializeToProtobuf($"{_workDirectoryPath}/personsProto.bin", persons);
-            SerializeToProtobufPlusZip($"{_workDirectoryPath}/personsProto.zip", "persons.bin", persons);
+            timer.Stop();
+            ShowElapsedTime("Protobuf", timer.Elapsed);
+
+            timer.Restart();
             SerializeToJson($"{_workDirectoryPath}/persons.json", persons);
-            SerializeToJsonPlusZip($"{_workDirectoryPath}/personsJson.zip", "persons.json", persons);
+            timer.Stop();
+            ShowElapsedTime("JSON", timer.Elapsed);
+
+            timer.Restart();
             SerializeToSimpleBinary($"{_workDirectoryPath}/personsSimple.dat", persons);
-            SerializeToSimpleBinaryPlusZip($"{_workDirectoryPath}/personsSimple.zip", "persons.dat", persons);
+            timer.Stop();
+            ShowElapsedTime("Binary", timer.Elapsed);
+
+            timer.Restart();
             SerializeToXml($"{_workDirectoryPath}/persons.xml", SaveOptions.DisableFormatting, persons);
+            timer.Stop();
+            ShowElapsedTime("XML", timer.Elapsed);
+
+            Console.WriteLine();
+
+            timer.Restart();
+            SerializeToProtobufPlusZip($"{_workDirectoryPath}/personsProto.zip", "persons.bin", persons);
+            timer.Stop();
+            ShowElapsedTime("Protobuf + zip", timer.Elapsed);
+
+            timer.Restart();
+            SerializeToJsonPlusZip($"{_workDirectoryPath}/personsJson.zip", "persons.json", persons);
+            timer.Stop();
+            ShowElapsedTime("JSON + zip", timer.Elapsed);
+
+            timer.Restart();
+            SerializeToSimpleBinaryPlusZip($"{_workDirectoryPath}/personsSimple.zip", "persons.dat", persons);
+            timer.Stop();
+            ShowElapsedTime("Binary + zip", timer.Elapsed);
+
+            timer.Restart();
             SerializeToXmlPlusZip($"{_workDirectoryPath}/personsXml.zip", "persons.xml", SaveOptions.DisableFormatting, persons);
+            timer.Stop();
+            ShowElapsedTime("XML + zip", timer.Elapsed);
+
+            Console.WriteLine("\r\nDone");
+            Console.ReadKey();
         }
 
 
@@ -58,14 +98,14 @@ namespace SerializersCompare
             }
             return personsList;
         }
-        public static void SerializeToProtobuf(String filePath, List<Person> persons)
+        private static void SerializeToProtobuf(String filePath, List<Person> persons)
         {
             using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
             {
                 Serializer.Serialize(fileStream, persons);
             }
         }
-        public static void SerializeToProtobufPlusZip(String filePath, String entryFileName, List<Person> persons)
+        private static void SerializeToProtobufPlusZip(String filePath, String entryFileName, List<Person> persons)
         {
             using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
             {
@@ -77,7 +117,7 @@ namespace SerializersCompare
                 }
             }
         }
-        public static void SerializeToJson(String filePath, List<Person> persons)
+        private static void SerializeToJson(String filePath, List<Person> persons)
         {
             using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
             {
@@ -87,7 +127,7 @@ namespace SerializersCompare
                 }
             }
         }
-        public static void SerializeToJsonPlusZip(String filePath, String entryFileName, List<Person> persons)
+        private static void SerializeToJsonPlusZip(String filePath, String entryFileName, List<Person> persons)
         {
             using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
             {
@@ -101,14 +141,14 @@ namespace SerializersCompare
                 }
             }
         }
-        public static void SerializeToSimpleBinary(String filePath, List<Person> persons)
+        private static void SerializeToSimpleBinary(String filePath, List<Person> persons)
         {
             using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
             {
                 new BinaryFormatter().Serialize(fileStream, persons);
             }
         }
-        public static void SerializeToSimpleBinaryPlusZip(String filePath, String entryFileName, List<Person> persons)
+        private static void SerializeToSimpleBinaryPlusZip(String filePath, String entryFileName, List<Person> persons)
         {
             using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
             {
@@ -119,14 +159,14 @@ namespace SerializersCompare
                 }
             }
         }
-        public static void SerializeToXml(String filePath, SaveOptions saveOptions, List<Person> persons)
+        private static void SerializeToXml(String filePath, SaveOptions saveOptions, List<Person> persons)
         {
             using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
             {
                 GenerateXml(fileStream, saveOptions, persons);
             }
         }
-        public static void SerializeToXmlPlusZip(String filePath, String entryFileName, SaveOptions saveOptions, List<Person> persons)
+        private static void SerializeToXmlPlusZip(String filePath, String entryFileName, SaveOptions saveOptions, List<Person> persons)
         {
             using (var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
             {
@@ -140,7 +180,7 @@ namespace SerializersCompare
 
 
         // SUPPORT FUNCTIONS //////////////////////////////////////////////////////////////////////
-        public static T SesrializeSimpleBinary<T>(String filePath)
+        private static T DeserializeSimpleBinary<T>(String filePath)
         {
             using (var fileStream = new FileStream(filePath, FileMode.Open))
             {
@@ -176,6 +216,10 @@ namespace SerializersCompare
             }
             xDoc.Add(personElements);
             xDoc.Save(fileStream, saveOptions);
+        }
+        private static void ShowElapsedTime(String methodName, TimeSpan elapsedTime)
+        {
+            Console.WriteLine($"{methodName,-15}\t{elapsedTime.Hours:00}:{elapsedTime.Minutes:00}:{elapsedTime.Seconds:00}.{elapsedTime.Milliseconds / 10:00}");
         }
     }
 }
