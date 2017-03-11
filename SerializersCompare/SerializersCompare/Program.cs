@@ -14,12 +14,12 @@ namespace SerializersCompare
 {
     class Program
     {
-        private static readonly String _workDirectoryPath = $@"{Environment.GetFolderPath(Environment.SpecialFolder.Desktop)}/SerializersCompare";
+        private static readonly String _workDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "SerializersCompare");
         private static readonly Stopwatch _timer = new Stopwatch();
         private const Int32 PERSONS_NUMBER = 100000;
 
 
-        static void Main(string[] args)
+        static void Main(String[] args)
         {
             if (!Directory.Exists(_workDirectoryPath))
                 Directory.CreateDirectory(_workDirectoryPath);
