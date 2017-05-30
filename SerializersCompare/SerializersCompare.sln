@@ -1,9 +1,23 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.25123.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SerializersCompare", "SerializersCompare\SerializersCompare.csproj", "{44B273E8-1CE0-4380-8F40-6BFC19C02029}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Items", "Items", "{9FC39EDC-2291-4C36-AAC0-E4484C44D505}"
+	ProjectSection(SolutionItems) = preProject
+		clean-with-scc.bat = clean-with-scc.bat
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Article", "Article", "{B5484E80-D3B4-43F4-B45E-CB7D10443A5A}"
+	ProjectSection(SolutionItems) = preProject
+		Article\console.png = Article\console.png
+		Article\files.png = Article\files.png
+		Article\Popular serialization formats, analysis of effectivness en.docx = Article\Popular serialization formats, analysis of effectivness en.docx
+		Article\Popular serialization formats, analysis of effectivness ru.docx = Article\Popular serialization formats, analysis of effectivness ru.docx
+		Article\Serializers compare table.xlsx = Article\Serializers compare table.xlsx
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
