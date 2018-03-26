@@ -16,7 +16,7 @@ namespace SerializersCompare
     {
         private static readonly String _workDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "SerializersCompare");
         private static readonly Stopwatch _timer = new Stopwatch();
-        private const Int32 PERSONS_NUMBER = 100000;
+        private const Int32 PersonsNumber = 100000;
 
 
         static void Main(String[] args)
@@ -72,10 +72,10 @@ namespace SerializersCompare
         // FUNCTIONS //////////////////////////////////////////////////////////////////////////////
         private static Person[] GeneratePersons()
         {
-            var personsList = new List<Person>(PERSONS_NUMBER);
+            var personsList = new List<Person>(PersonsNumber);
             var rnd = new Random();
 
-            for (var i = 0; i < PERSONS_NUMBER; i++)
+            for (var i = 0; i < PersonsNumber; i++)
             {
                 var personId = rnd.Next();
                 personsList.Add(new Person
@@ -84,9 +84,9 @@ namespace SerializersCompare
                     TransportId = Guid.NewGuid(),
                     Name = $"Person {personId} name",
                     SequenceId = i,
-                    CreditCards = new Int32[] { rnd.Next(), rnd.Next(), rnd.Next() },
+                    CreditCards = new[] { rnd.Next(), rnd.Next(), rnd.Next() },
                     Age = rnd.Next(100),
-                    Phones = new String[] { rnd.Next().ToString(), rnd.Next().ToString(), rnd.Next().ToString() },
+                    Phones = new[] { rnd.Next().ToString(), rnd.Next().ToString(), rnd.Next().ToString() },
                     BirthDate = DateTime.UtcNow + TimeSpan.FromTicks(rnd.Next()),
                     Salary = rnd.NextDouble(),
                     IsMarred = rnd.Next() > Int32.MaxValue / 2
@@ -108,12 +108,16 @@ namespace SerializersCompare
         {
             using (var memoryStream = new MemoryStream())
             {
-                using (var writer = new StreamWriter(memoryStream, Encoding.UTF8))
+                using (var streamWriter = new StreamWriter(memoryStream, Encoding.UTF8))
                 {
-                    _timer.Restart();
-                    writer.Write(JsonConvert.SerializeObject(persons));
-                    _timer.Stop();
-                    return memoryStream.ToArray();
+                    using (var textWriter = new JsonTextWriter(streamWriter))
+                    {
+                        _timer.Restart();
+                        new JsonSerializer().Serialize(textWriter, persons, typeof(Person[]));
+                        _timer.Stop();
+
+                        return memoryStream.ToArray();
+                    }
                 }
             }
         }
@@ -159,14 +163,18 @@ namespace SerializersCompare
                 using (var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
                 {
                     var zipArchiveEntry = zipArchive.CreateEntry(entryFileName, CompressionLevel.Optimal);
-                    using (var writer = new StreamWriter(zipArchiveEntry.Open(), Encoding.UTF8))
-                    {
-                        _timer.Restart();
-                        writer.Write(JsonConvert.SerializeObject(persons));
-                        _timer.Stop();
 
+                    using (var streamWriter = new StreamWriter(zipArchiveEntry.Open(), Encoding.UTF8))
+                    {
+                        using (var textWriter = new JsonTextWriter(streamWriter))
+                        {
+                            _timer.Restart();
+                            new JsonSerializer().Serialize(textWriter, persons, typeof(Person[]));
+                            _timer.Stop();
+
+                            return memoryStream.ToArray();
+                        }
                     }
-                    return memoryStream.ToArray();
                 }
             }
         }
