@@ -1,0 +1,1 @@
+This is project and article where I compare different data serializers by different properties.

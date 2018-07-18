@@ -1,20 +1,22 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2042
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SerializersCompare", "SerializersCompare\SerializersCompare.csproj", "{44B273E8-1CE0-4380-8F40-6BFC19C02029}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Items", "Items", "{9FC39EDC-2291-4C36-AAC0-E4484C44D505}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{9FC39EDC-2291-4C36-AAC0-E4484C44D505}"
 	ProjectSection(SolutionItems) = preProject
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
 		clean-with-scc.bat = clean-with-scc.bat
+		readme.md = readme.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Article", "Article", "{B5484E80-D3B4-43F4-B45E-CB7D10443A5A}"
 	ProjectSection(SolutionItems) = preProject
 		Article\console.png = Article\console.png
 		Article\files.png = Article\files.png
-		Article\Popular serialization formats, analysis of effectivness en.docx = Article\Popular serialization formats, analysis of effectivness en.docx
 		Article\Popular serialization formats, analysis of effectivness ru.docx = Article\Popular serialization formats, analysis of effectivness ru.docx
 		Article\Serializers compare table.xlsx = Article\Serializers compare table.xlsx
 	EndProjectSection
@@ -32,5 +34,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A03EF227-2F33-43F1-BE46-DB1F45F23ADD}
 	EndGlobalSection
 EndGlobal
