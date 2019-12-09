@@ -166,11 +166,13 @@ namespace SerializersCompare
 				return memoryStream.ToArray();
 			}
 		}
+
+		// + Zip
 		private static Byte[] SerializeToProtobufPlusZip(String entryFileName, Person[] persons)
 		{
 			using(var memoryStream = new MemoryStream())
 			{
-				using(var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+				using(var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create))
 				{
 					var zipArchiveEntry = zipArchive.CreateEntry(entryFileName, CompressionLevel.Optimal);
 					using(var entryStream = zipArchiveEntry.Open())
@@ -230,7 +232,7 @@ namespace SerializersCompare
 		{
 			using(var memoryStream = new MemoryStream())
 			{
-				using(var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+				using(var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create))
 				{
 					var zipArchiveEntry = zipArchive.CreateEntry(entryFileName, CompressionLevel.Optimal);
 					using(var entryStream = zipArchiveEntry.Open())
@@ -247,7 +249,7 @@ namespace SerializersCompare
 		{
 			using(var memoryStream = new MemoryStream())
 			{
-				using(var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+				using(var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create))
 				{
 					var zipArchiveEntry = zipArchive.CreateEntry(entryFileName, CompressionLevel.Optimal);
 					using(var entryStream = zipArchiveEntry.Open())
@@ -268,13 +270,6 @@ namespace SerializersCompare
 			using(var fileStream = new FileStream(filePath, FileMode.Create, FileAccess.Write))
 			{
 				fileStream.Write(buffer, 0, buffer.Length);
-			}
-		}
-		private static T DeserializeSimpleBinaryFromFile<T>(String filePath)
-		{
-			using(var fileStream = new FileStream(filePath, FileMode.Open))
-			{
-				return (T)new BinaryFormatter().Deserialize(fileStream);
 			}
 		}
 		private static void GenerateXml(Stream memoryStream, SaveOptions saveOptions, Person[] persons)
@@ -320,6 +315,28 @@ namespace SerializersCompare
 		private static void ShowResult(String methodName, TimeSpan elapsedTime, Int64 resultSize)
 		{
 			Console.WriteLine($"{methodName,-15}\t{elapsedTime.Hours:00}:{elapsedTime.Minutes:00}:{elapsedTime.Seconds:00}.{elapsedTime.Milliseconds / 10:00}\t{resultSize / 1000:###.###.###} KB");
+		}
+		private static T DeserializeSimpleBinaryFromFile<T>(String filePath)
+		{
+			using(var fileStream = new FileStream(filePath, FileMode.Open))
+			{
+				return (T)new BinaryFormatter().Deserialize(fileStream);
+			}
+		}
+		private static Byte[] CreateZipArchive(String entryFileName, Action<Stream> action)
+		{
+			using(var memoryStream = new MemoryStream())
+			{
+				using(var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create))
+				{
+					var zipArchiveEntry = zipArchive.CreateEntry(entryFileName, CompressionLevel.Optimal);
+					using(var entryStream = zipArchiveEntry.Open())
+					{
+						action.Invoke(entryStream);
+					}
+				}
+				return memoryStream.ToArray();
+			}
 		}
 	}
 }
