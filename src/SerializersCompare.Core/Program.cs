@@ -1,6 +1,6 @@
 ﻿using Newtonsoft.Json;
 using ProtoBuf;
-using SerializersCompare.Models;
+using SerializersCompare.Core.Models;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -10,13 +10,13 @@ using System.Runtime.Serialization.Formatters.Binary;
 using System.Text;
 using System.Xml.Linq;
 
-namespace SerializersCompare
+namespace SerializersCompare.Core
 {
 	class Program
 	{
 		private static readonly String _workDirectoryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "SerializersCompare");
 		private static readonly Stopwatch _timer = new Stopwatch();
-		private const Int32 PersonsNumber = 100000;
+		private const Int32 _personsAmount = 100000;
 
 
 		static void Main(String[] args)
@@ -32,8 +32,12 @@ namespace SerializersCompare
 			WriteResultToFile($"{_workDirectoryPath}/personsProto.bin", buffer);
 
 			buffer = SerializeToJsonByNewtonsoft(persons);
-			ShowResult("JSON", _timer.Elapsed, buffer.Length);
-			WriteResultToFile($"{_workDirectoryPath}/persons.json", buffer);
+			ShowResult("Newtonsoft JSON", _timer.Elapsed, buffer.Length);
+			WriteResultToFile($"{_workDirectoryPath}/newtonsoftPersons.json", buffer);
+
+			buffer = SerializeToJsonByMicrosoft(persons);
+			ShowResult("Microsoft JSON", _timer.Elapsed, buffer.Length);
+			WriteResultToFile($"{_workDirectoryPath}/microsoftPersons.json", buffer);
 
 			buffer = SerializeToSimpleBinary(persons);
 			ShowResult("Binary", _timer.Elapsed, buffer.Length);
@@ -52,12 +56,16 @@ namespace SerializersCompare
 			WriteResultToFile($"{_workDirectoryPath}/personsProto.zip", buffer);
 
 			buffer = SerializeToJsonByNewtonsoftPlusZip("persons.json", persons);
-			ShowResult("JSON + zip", _timer.Elapsed, buffer.Length);
-			WriteResultToFile($"{_workDirectoryPath}/personsJson.zip", buffer);
+			ShowResult("N JSON + zip", _timer.Elapsed, buffer.Length);
+			WriteResultToFile($"{_workDirectoryPath}/newtonsoftPersonsJson.zip", buffer);
 
-			buffer = SerializeToSimpleBinaryPlusZip("persons.dat", persons);
+			buffer = SerializeToJsonByMicrosoftPlusZip("persons.json", persons);
+			ShowResult("M JSON + zip", _timer.Elapsed, buffer.Length);
+			WriteResultToFile($"{_workDirectoryPath}/microsoftPersonsJson.zip", buffer);
+
+			buffer = SerializeToSimpleBinaryPlusZip("persons.bin", persons);
 			ShowResult("Binary + zip", _timer.Elapsed, buffer.Length);
-			WriteResultToFile($"{_workDirectoryPath}/personsSimple.zip", buffer);
+			WriteResultToFile($"{_workDirectoryPath}/personsSimpleBinary.zip", buffer);
 
 			buffer = SerializeToXmlPlusZip("persons.xml", SaveOptions.DisableFormatting, persons);
 			ShowResult("XML + zip", _timer.Elapsed, buffer.Length);
@@ -72,10 +80,10 @@ namespace SerializersCompare
 		// FUNCTIONS //////////////////////////////////////////////////////////////////////////////
 		private static Person[] GeneratePersons()
 		{
-			var personsList = new List<Person>(PersonsNumber);
+			var personsList = new List<Person>(_personsAmount);
 			var rnd = new Random();
 
-			for(var i = 0; i < PersonsNumber; i++)
+			for(var i = 0; i < _personsAmount; i++)
 			{
 				var personId = rnd.Next();
 				personsList.Add(new Person
@@ -121,6 +129,20 @@ namespace SerializersCompare
 				}
 			}
 		}
+		private static Byte[] SerializeToJsonByMicrosoft(Person[] persons)
+		{
+			using(var memoryStream = new MemoryStream())
+			{
+				using(var jsonWriter = new System.Text.Json.Utf8JsonWriter(memoryStream))
+				{
+					_timer.Restart();
+					System.Text.Json.JsonSerializer.Serialize(jsonWriter, persons);
+					_timer.Stop();
+
+					return memoryStream.ToArray();
+				}
+			}
+		}
 		private static Byte[] SerializeToSimpleBinary(Person[] persons)
 		{
 			using(var memoryStream = new MemoryStream())
@@ -163,7 +185,6 @@ namespace SerializersCompare
 				using(var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
 				{
 					var zipArchiveEntry = zipArchive.CreateEntry(entryFileName, CompressionLevel.Optimal);
-
 					using(var streamWriter = new StreamWriter(zipArchiveEntry.Open(), Encoding.UTF8))
 					{
 						using(var textWriter = new JsonTextWriter(streamWriter))
@@ -174,6 +195,24 @@ namespace SerializersCompare
 
 							return memoryStream.ToArray();
 						}
+					}
+				}
+			}
+		}
+		private static Byte[] SerializeToJsonByMicrosoftPlusZip(String entryFileName, Person[] persons)
+		{
+			using(var memoryStream = new MemoryStream())
+			{
+				using(var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+				{
+					var zipArchiveEntry = zipArchive.CreateEntry(entryFileName, CompressionLevel.Optimal);
+					using(var jsonWriter = new System.Text.Json.Utf8JsonWriter(zipArchiveEntry.Open()))
+					{
+						_timer.Restart();
+						System.Text.Json.JsonSerializer.Serialize(jsonWriter, persons);
+						_timer.Stop();
+
+						return memoryStream.ToArray();
 					}
 				}
 			}
