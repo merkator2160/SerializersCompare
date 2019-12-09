@@ -109,6 +109,7 @@ namespace SerializersCompare
 				_timer.Restart();
 				Serializer.Serialize(memoryStream, persons);
 				_timer.Stop();
+
 				return memoryStream.ToArray();
 			}
 		}
@@ -150,6 +151,7 @@ namespace SerializersCompare
 				_timer.Restart();
 				new BinaryFormatter().Serialize(memoryStream, persons);
 				_timer.Stop();
+
 				return memoryStream.ToArray();
 			}
 		}
@@ -160,6 +162,7 @@ namespace SerializersCompare
 				_timer.Restart();
 				GenerateXml(memoryStream, saveOptions, persons);
 				_timer.Stop();
+
 				return memoryStream.ToArray();
 			}
 		}
@@ -170,10 +173,12 @@ namespace SerializersCompare
 				using(var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
 				{
 					var zipArchiveEntry = zipArchive.CreateEntry(entryFileName, CompressionLevel.Optimal);
-					var zipStream = zipArchiveEntry.Open();
-					_timer.Restart();
-					Serializer.Serialize(zipStream, persons);
-					_timer.Stop();
+					using(var entryStream = zipArchiveEntry.Open())
+					{
+						_timer.Restart();
+						Serializer.Serialize(entryStream, persons);
+						_timer.Stop();
+					}
 				}
 				return memoryStream.ToArray();
 			}
@@ -185,9 +190,9 @@ namespace SerializersCompare
 				using(var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create))
 				{
 					var zipArchiveEntry = zipArchive.CreateEntry(entryFileName, CompressionLevel.Optimal);
-					using(var entry = zipArchiveEntry.Open())
+					using(var entryStream = zipArchiveEntry.Open())
 					{
-						using(var streamWriter = new StreamWriter(entry, Encoding.UTF8))
+						using(var streamWriter = new StreamWriter(entryStream, Encoding.UTF8))
 						{
 							using(var textWriter = new JsonTextWriter(streamWriter))
 							{
@@ -208,15 +213,13 @@ namespace SerializersCompare
 				using(var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create))
 				{
 					var zipArchiveEntry = zipArchive.CreateEntry(entryFileName, CompressionLevel.Optimal);
-					using(var entry = zipArchiveEntry.Open())
+					using(var entryStream = zipArchiveEntry.Open())
 					{
-						using(var jsonWriter = new System.Text.Json.Utf8JsonWriter(entry))
+						using(var jsonWriter = new System.Text.Json.Utf8JsonWriter(entryStream))
 						{
 							_timer.Restart();
 							System.Text.Json.JsonSerializer.Serialize(jsonWriter, persons);
 							_timer.Stop();
-
-
 						}
 					}
 				}
@@ -230,9 +233,12 @@ namespace SerializersCompare
 				using(var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
 				{
 					var zipArchiveEntry = zipArchive.CreateEntry(entryFileName, CompressionLevel.Optimal);
-					_timer.Restart();
-					new BinaryFormatter().Serialize(zipArchiveEntry.Open(), persons);
-					_timer.Stop();
+					using(var entryStream = zipArchiveEntry.Open())
+					{
+						_timer.Restart();
+						new BinaryFormatter().Serialize(entryStream, persons);
+						_timer.Stop();
+					}
 				}
 				return memoryStream.ToArray();
 			}
@@ -244,9 +250,12 @@ namespace SerializersCompare
 				using(var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
 				{
 					var zipArchiveEntry = zipArchive.CreateEntry(entryFileName, CompressionLevel.Optimal);
-					_timer.Restart();
-					GenerateXml(zipArchiveEntry.Open(), saveOptions, persons);
-					_timer.Stop();
+					using(var entryStream = zipArchiveEntry.Open())
+					{
+						_timer.Restart();
+						GenerateXml(entryStream, saveOptions, persons);
+						_timer.Stop();
+					}
 				}
 				return memoryStream.ToArray();
 			}
