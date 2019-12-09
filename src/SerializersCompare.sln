@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29519.181
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SerializersCompare", "SerializersCompare\SerializersCompare.csproj", "{44B273E8-1CE0-4380-8F40-6BFC19C02029}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{9FC39EDC-2291-4C36-AAC0-E4484C44D505}"
 	ProjectSection(SolutionItems) = preProject
 		.gitattributes = .gitattributes
@@ -21,7 +19,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Article", "Article", "{B548
 		Article\Serializers compare table.xlsx = Article\Serializers compare table.xlsx
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SerializersCompare.Core", "SerializersCompare.Core\SerializersCompare.Core.csproj", "{A81D7710-C530-4CE9-A58A-1BB406F41C22}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SerializersCompare", "SerializersCompare\SerializersCompare.csproj", "{FF6C66BD-4561-4AD2-B45F-B750EB51DF9E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -29,14 +27,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{44B273E8-1CE0-4380-8F40-6BFC19C02029}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{44B273E8-1CE0-4380-8F40-6BFC19C02029}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{44B273E8-1CE0-4380-8F40-6BFC19C02029}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{44B273E8-1CE0-4380-8F40-6BFC19C02029}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A81D7710-C530-4CE9-A58A-1BB406F41C22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A81D7710-C530-4CE9-A58A-1BB406F41C22}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A81D7710-C530-4CE9-A58A-1BB406F41C22}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A81D7710-C530-4CE9-A58A-1BB406F41C22}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FF6C66BD-4561-4AD2-B45F-B750EB51DF9E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FF6C66BD-4561-4AD2-B45F-B750EB51DF9E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FF6C66BD-4561-4AD2-B45F-B750EB51DF9E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FF6C66BD-4561-4AD2-B45F-B750EB51DF9E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
