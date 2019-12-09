@@ -121,7 +121,7 @@ namespace SerializersCompare
 					using(var textWriter = new JsonTextWriter(streamWriter))
 					{
 						_timer.Restart();
-						new JsonSerializer().Serialize(textWriter, persons, typeof(Person[]));
+						new JsonSerializer().Serialize(textWriter, persons);
 						_timer.Stop();
 
 						return memoryStream.ToArray();
@@ -182,39 +182,45 @@ namespace SerializersCompare
 		{
 			using(var memoryStream = new MemoryStream())
 			{
-				using(var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+				using(var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create))
 				{
 					var zipArchiveEntry = zipArchive.CreateEntry(entryFileName, CompressionLevel.Optimal);
-					using(var streamWriter = new StreamWriter(zipArchiveEntry.Open(), Encoding.UTF8))
+					using(var entry = zipArchiveEntry.Open())
 					{
-						using(var textWriter = new JsonTextWriter(streamWriter))
+						using(var streamWriter = new StreamWriter(entry, Encoding.UTF8))
 						{
-							_timer.Restart();
-							new JsonSerializer().Serialize(textWriter, persons, typeof(Person[]));
-							_timer.Stop();
-
-							return memoryStream.ToArray();
+							using(var textWriter = new JsonTextWriter(streamWriter))
+							{
+								_timer.Restart();
+								new JsonSerializer().Serialize(textWriter, persons);
+								_timer.Stop();
+							}
 						}
 					}
 				}
+				return memoryStream.ToArray();
 			}
 		}
 		private static Byte[] SerializeToJsonByMicrosoftPlusZip(String entryFileName, Person[] persons)
 		{
 			using(var memoryStream = new MemoryStream())
 			{
-				using(var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create, true))
+				using(var zipArchive = new ZipArchive(memoryStream, ZipArchiveMode.Create))
 				{
 					var zipArchiveEntry = zipArchive.CreateEntry(entryFileName, CompressionLevel.Optimal);
-					using(var jsonWriter = new System.Text.Json.Utf8JsonWriter(zipArchiveEntry.Open()))
+					using(var entry = zipArchiveEntry.Open())
 					{
-						_timer.Restart();
-						System.Text.Json.JsonSerializer.Serialize(jsonWriter, persons);
-						_timer.Stop();
+						using(var jsonWriter = new System.Text.Json.Utf8JsonWriter(entry))
+						{
+							_timer.Restart();
+							System.Text.Json.JsonSerializer.Serialize(jsonWriter, persons);
+							_timer.Stop();
 
-						return memoryStream.ToArray();
+
+						}
 					}
 				}
+				return memoryStream.ToArray();
 			}
 		}
 		private static Byte[] SerializeToSimpleBinaryPlusZip(String entryFileName, Person[] persons)
